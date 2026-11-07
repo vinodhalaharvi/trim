@@ -8,7 +8,7 @@ import (
 
 func TestSnapKeepsFrameGrid(t *testing.T) {
 	got := Snap([][2]float64{{1.012, 2.049}, {5.5, 5.51}}, 25)
-	if len(got) != 1 || got[0] != [2]float64{1.0, 2.04} {
+	if len(got) != 1 || got[0] != [2]float64{1.04, 2.04} {
 		t.Fatalf("got %v", got)
 	}
 }

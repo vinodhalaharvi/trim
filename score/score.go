@@ -24,7 +24,10 @@ var (
 	fillers = []string{"um", "uh", "erm", "er", "ah", "uhm", "hmm", "mm"}
 	phrases = []string{"you know", "i mean", "sort of", "kind of", "basically", "anyway", "let me just", "where was i"}
 	meta    = []string{"hear me", "slide", "slides", "mic", "microphone", "screen", "one second", "bear with me",
-		"switch windows", "over time", "my notes", "can you see", "is this on", "water"}
+		"switch windows", "over time", "my notes", "can you see", "is this on", "water",
+		"thank you", "thanks again", "for questions", "any questions", "next question", "good question",
+		"great question", "wrap up", "that's time", "that is time"}
+	numbers = regexp.MustCompile(`\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|sixty|hundred|thousand|million|half|third|quarter|double|doubled|twice)\b`)
 )
 
 // Heuristic scores a sentence from its words and timing alone.
@@ -69,6 +72,9 @@ func Heuristic(s subs.Sentence) float64 {
 	}
 	if n >= 8 && filler == 0 && metaHits == 0 {
 		score += 0.15
+		if numbers.MatchString(text) {
+			score += 0.1 // specific claims are usually the point
+		}
 	}
 	return math.Max(0.02, math.Min(1, score))
 }

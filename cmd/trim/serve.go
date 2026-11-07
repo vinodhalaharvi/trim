@@ -156,7 +156,11 @@ func serve(args []string) error {
 		srt := strings.TrimSuffix(name, filepath.Ext(name)) + ".srt"
 		_ = media.WriteSRTFile(srt, media.Retime(in.Sentences, c.Sentences, media.Snap(c.Spans, in.Info.FPS)))
 		abs, _ := filepath.Abs(name)
-		writeJSON(w, map[string]any{"path": abs, "length": c.Length})
+		length := 0.0
+		for _, sp := range media.Snap(c.Spans, in.Info.FPS) {
+			length += sp[1] - sp[0]
+		}
+		writeJSON(w, map[string]any{"path": abs, "length": length})
 	})
 
 	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *port))

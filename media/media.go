@@ -69,27 +69,70 @@ func Probe(path string) (Info, error) {
 
 const fade = 0.03 // seconds of audio fade at each cut, to avoid clicks
 
+// batch is how many spans one ffmpeg run decodes at once; each open input
+// costs memory, so long edit lists are rendered in batches and then joined.
+const batch = 6
+
 // Render writes the spans of in, joined in order, to out. Video is
-// re-encoded (H.264) so cuts land exactly; audio fades briefly at each cut.
+// re-encoded (H.264) so cuts land exactly on frames; audio fades briefly at
+// each cut.
 func Render(in, out string, info Info, spans [][2]float64) error {
 	if _, err := exec.LookPath("ffmpeg"); err != nil {
 		return ErrNoFFmpeg
 	}
+	spans = Snap(spans, info.FPS)
 	if len(spans) == 0 {
 		return errors.New("nothing to render")
 	}
-	var g strings.Builder
-	var labels strings.Builder
-	for k, sp := range Snap(spans, info.FPS) {
+	if len(spans) <= batch {
+		return renderBatch(in, out, out, info, spans)
+	}
+	dir, err := os.MkdirTemp("", "trim-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(dir)
+	var list strings.Builder
+	for k := 0; k < len(spans); k += batch {
+		part := filepath.Join(dir, fmt.Sprintf("part%04d.mkv", k/batch))
+		if err := renderBatch(in, part, out, info, spans[k:min(k+batch, len(spans))]); err != nil {
+			return err
+		}
+		fmt.Fprintf(&list, "file '%s'\n", part)
+	}
+	listFile := filepath.Join(dir, "parts.txt")
+	if err := os.WriteFile(listFile, []byte(list.String()), 0o644); err != nil {
+		return err
+	}
+	// every part starts on a fresh keyframe, so they join without re-encoding
+	// Parts start on fresh keyframes, so video joins without re-encoding.
+	// Parts carry uncompressed audio, encoded once here: encoding each part
+	// would add encoder padding at every join and drift against the picture.
+	args := []string{"-hide_banner", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", listFile, "-c:v", "copy"}
+	if info.HasAudio {
+		if codec := audioCodec(out); codec != "" {
+			args = append(args, "-c:a", codec)
+		}
+	}
+	return run(append(append(args, container(out)...), out))
+}
+
+// renderBatch cuts a few spans into one file. Codecs follow final, the name
+// of the file the user asked for, even when writing an intermediate part.
+func renderBatch(in, out, final string, info Info, spans [][2]float64) error {
+	// Each span is its own seeked input, so ffmpeg decodes only what is kept.
+	args := []string{"-hide_banner", "-loglevel", "error", "-y"}
+	var g, labels strings.Builder
+	for k, sp := range spans {
 		a, b := sp[0], sp[1]
+		args = append(args, "-ss", fmt.Sprintf("%.3f", a), "-t", fmt.Sprintf("%.3f", b-a), "-i", in)
 		if info.HasVideo {
-			fmt.Fprintf(&g, "[0:v]trim=start=%.3f:end=%.3f,setpts=PTS-STARTPTS[v%d];", a, b, k)
+			fmt.Fprintf(&g, "[%d:v]setpts=PTS-STARTPTS[v%d];", k, k)
 			fmt.Fprintf(&labels, "[v%d]", k)
 		}
 		if info.HasAudio {
-			d := b - a
-			fmt.Fprintf(&g, "[0:a]atrim=start=%.3f:end=%.3f,asetpts=PTS-STARTPTS,afade=t=in:st=0:d=%.3f,afade=t=out:st=%.3f:d=%.3f[a%d];",
-				a, b, fade, max(0, d-fade), fade, k)
+			fmt.Fprintf(&g, "[%d:a]asetpts=PTS-STARTPTS,afade=t=in:st=0:d=%.3f,afade=t=out:st=%.3f:d=%.3f[a%d];",
+				k, fade, max(0, b-a-fade), fade, k)
 			fmt.Fprintf(&labels, "[a%d]", k)
 		}
 	}
@@ -100,21 +143,41 @@ func Render(in, out string, info Info, spans [][2]float64) error {
 	if info.HasAudio {
 		a = 1
 	}
-	fmt.Fprintf(&g, "%sconcat=n=%d:v=%d:a=%d", labels.String(), len(spans), v, a)
-	args := []string{"-hide_banner", "-loglevel", "error", "-y", "-i", in, "-filter_complex", g.String() + outs(info)}
+	fmt.Fprintf(&g, "%sconcat=n=%d:v=%d:a=%d%s", labels.String(), len(spans), v, a, outs(info))
+	script, err := os.CreateTemp("", "trim-*.filter")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(script.Name())
+	script.WriteString(g.String())
+	script.Close()
+	args = append(args, "-filter_complex_script", script.Name())
 	if info.HasVideo {
 		args = append(args, "-map", "[v]", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p")
 	}
 	if info.HasAudio {
 		args = append(args, "-map", "[a]")
-		if codec := audioCodec(out); codec != "" {
+		if out != final {
+			args = append(args, "-c:a", "pcm_s16le")
+		} else if codec := audioCodec(final); codec != "" {
 			args = append(args, "-c:a", codec)
 		}
 	}
-	if strings.EqualFold(filepath.Ext(out), ".mp4") || strings.EqualFold(filepath.Ext(out), ".m4a") || strings.EqualFold(filepath.Ext(out), ".mov") {
-		args = append(args, "-movflags", "+faststart")
+	if out == final {
+		args = append(args, container(out)...)
 	}
-	args = append(args, out)
+	return run(append(args, out))
+}
+
+func container(out string) []string {
+	switch strings.ToLower(filepath.Ext(out)) {
+	case ".mp4", ".m4a", ".mov":
+		return []string{"-movflags", "+faststart"}
+	}
+	return nil
+}
+
+func run(args []string) error {
 	var stderr bytes.Buffer
 	cmd := exec.Command("ffmpeg", args...)
 	cmd.Stderr = &stderr
@@ -122,6 +185,9 @@ func Render(in, out string, info Info, spans [][2]float64) error {
 		msg := strings.TrimSpace(stderr.String())
 		if len(msg) > 600 {
 			msg = msg[len(msg)-600:]
+		}
+		if msg == "" {
+			msg = err.Error()
 		}
 		return fmt.Errorf("ffmpeg failed: %s", msg)
 	}
@@ -137,7 +203,8 @@ func Snap(spans [][2]float64, fps float64) [][2]float64 {
 	}
 	out := make([][2]float64, 0, len(spans))
 	for _, sp := range spans {
-		a, b := math.Round(sp[0]*fps)/fps, math.Round(sp[1]*fps)/fps
+		// snap inward, so a cut never grows past the length it was chosen for
+		a, b := math.Ceil(sp[0]*fps-1e-6)/fps, math.Floor(sp[1]*fps+1e-6)/fps
 		if b > a {
 			out = append(out, [2]float64{a, b})
 		}

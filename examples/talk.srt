@@ -1,0 +1,295 @@
+1
+00:00:00,600 --> 00:00:03,900
+Okay, is this mic on? Can
+
+2
+00:00:03,900 --> 00:00:06,450
+everyone at the back hear me?
+
+3
+00:00:07,000 --> 00:00:10,850
+Great. Let me just get
+
+4
+00:00:10,850 --> 00:00:13,850
+my slides up, one second.
+
+5
+00:00:14,400 --> 00:00:19,350
+Last year our team spent eleven hours a week
+
+6
+00:00:19,350 --> 00:00:23,250
+in meetings, and most of them ran over.
+
+7
+00:00:23,800 --> 00:00:28,200
+Today I want to show you the three changes
+
+8
+00:00:28,200 --> 00:00:31,650
+that got us back six of those hours.
+
+9
+00:00:32,200 --> 00:00:37,150
+Um, so, before that, a bit about me.
+
+10
+00:00:37,150 --> 00:00:41,050
+I lead a team of nine engineers.
+
+11
+00:00:41,600 --> 00:00:45,450
+Change one: every meeting has a
+
+12
+00:00:45,450 --> 00:00:48,450
+single question it exists to answer.
+
+13
+00:00:49,000 --> 00:00:52,850
+If you can't write the question in
+
+14
+00:00:52,850 --> 00:00:55,850
+the invite, you don't need the meeting.
+
+15
+00:00:56,400 --> 00:00:59,700
+We cancelled a third of our
+
+16
+00:00:59,700 --> 00:01:02,250
+recurring meetings in the first month.
+
+17
+00:01:02,800 --> 00:01:05,550
+Nobody missed them. Not one
+
+18
+00:01:05,550 --> 00:01:07,650
+person asked for one back.
+
+19
+00:01:08,200 --> 00:01:12,600
+Sorry, the font on this slide is a
+
+20
+00:01:12,600 --> 00:01:16,050
+bit small, you know, let me zoom.
+
+21
+00:01:16,600 --> 00:01:21,550
+Change two: the meeting ends when the question
+
+22
+00:01:21,550 --> 00:01:25,450
+is answered, not when the hour is up.
+
+23
+00:01:26,000 --> 00:01:28,200
+Calendar slots are a
+
+24
+00:01:28,200 --> 00:01:29,850
+ceiling, not a target.
+
+25
+00:01:30,400 --> 00:01:33,700
+Our average meeting went from
+
+26
+00:01:33,700 --> 00:01:36,250
+fifty-two minutes to twenty-one.
+
+27
+00:01:36,800 --> 00:01:40,100
+The trick is to say the question
+
+28
+00:01:40,100 --> 00:01:42,650
+out loud in the first minute.
+
+29
+00:01:43,200 --> 00:01:47,050
+Then anyone can call the meeting done,
+
+30
+00:01:47,050 --> 00:01:50,050
+and it feels normal, not rude.
+
+31
+00:01:50,600 --> 00:01:52,800
+Let me grab some
+
+32
+00:01:52,800 --> 00:01:54,450
+water. Long week.
+
+33
+00:01:55,000 --> 00:01:57,750
+Change three: decisions go in
+
+34
+00:01:57,750 --> 00:01:59,850
+writing within the hour.
+
+35
+00:02:00,400 --> 00:02:04,250
+A meeting without a written decision is
+
+36
+00:02:04,250 --> 00:02:07,250
+just a conversation that cost money.
+
+37
+00:02:07,800 --> 00:02:12,200
+We use a two-line template: what we
+
+38
+00:02:12,200 --> 00:02:15,650
+decided, and who does what by when.
+
+39
+00:02:16,200 --> 00:02:18,950
+That one habit killed most
+
+40
+00:02:18,950 --> 00:02:21,050
+of our follow-up meetings.
+
+41
+00:02:21,600 --> 00:02:24,900
+Um, so, yeah, where was
+
+42
+00:02:24,900 --> 00:02:27,450
+I. Right, the template.
+
+43
+00:02:28,000 --> 00:02:31,300
+People worried it would feel
+
+44
+00:02:31,300 --> 00:02:33,850
+bureaucratic. It did the opposite.
+
+45
+00:02:34,400 --> 00:02:37,700
+Writing it down took two minutes
+
+46
+00:02:37,700 --> 00:02:40,250
+and saved a week of confusion.
+
+47
+00:02:40,800 --> 00:02:45,750
+Here is the before and after for our
+
+48
+00:02:45,750 --> 00:02:49,650
+team, let me switch windows, there we go.
+
+49
+00:02:50,200 --> 00:02:52,400
+Eleven hours a
+
+50
+00:02:52,400 --> 00:02:54,050
+week became five.
+
+51
+00:02:54,600 --> 00:02:57,900
+And our survey score for 'meetings
+
+52
+00:02:57,900 --> 00:03:00,450
+are worth my time' doubled.
+
+53
+00:03:01,000 --> 00:03:03,200
+You don't need a new
+
+54
+00:03:03,200 --> 00:03:04,850
+tool for any of this.
+
+55
+00:03:05,400 --> 00:03:09,800
+You need one question, a willingness to
+
+56
+00:03:09,800 --> 00:03:13,250
+stop early, and a written decision.
+
+57
+00:03:13,800 --> 00:03:17,100
+Okay, I think I'm a bit over
+
+58
+00:03:17,100 --> 00:03:19,650
+time, so let me wrap up.
+
+59
+00:03:20,200 --> 00:03:24,050
+Pick one recurring meeting this week and
+
+60
+00:03:24,050 --> 00:03:27,050
+write its question in the invite.
+
+61
+00:03:27,600 --> 00:03:29,800
+If you can't, cancel it
+
+62
+00:03:29,800 --> 00:03:31,450
+and see who notices.
+
+63
+00:03:32,000 --> 00:03:35,300
+Thank you. I think we have
+
+64
+00:03:35,300 --> 00:03:37,850
+a few minutes for questions.
+
+65
+00:03:38,400 --> 00:03:42,250
+The first question was whether this
+
+66
+00:03:42,250 --> 00:03:45,250
+works for brainstorming. Good question.
+
+67
+00:03:45,800 --> 00:03:50,750
+For brainstorming the question is just broader, like
+
+68
+00:03:50,750 --> 00:03:54,650
+which three ideas do we try next.
+
+69
+00:03:55,200 --> 00:03:59,050
+Next question, about remote teams.
+
+70
+00:03:59,050 --> 00:04:02,050
+Honestly, it works better remotely.
+
+71
+00:04:02,600 --> 00:04:06,450
+Written decisions matter even more when
+
+72
+00:04:06,450 --> 00:04:09,450
+people are in different time zones.
+
+73
+00:04:10,000 --> 00:04:12,750
+Alright, I think that's
+
+74
+00:04:12,750 --> 00:04:14,850
+time. Thanks again, everyone.

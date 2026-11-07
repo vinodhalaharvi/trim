@@ -41,4 +41,4 @@ The best few cuts at nearby lengths are usually the same cut with one sentence s
 
 ## Rendering
 
-trim merges kept sentences that touch into spans, snaps every cut point to the video's frame grid (otherwise audio, cut to the sample, would drift against the picture by up to a frame per cut), trims each span with ffmpeg's `trim`/`atrim` filters, fades the audio in and out over 30 ms, and joins the spans with `concat`. The kept subtitle cues are shifted onto the new timeline and written beside the output.
+trim merges kept sentences that touch into spans and snaps every cut point inward to the video's frame grid; otherwise audio, which is cut to the sample, would drift against the picture by up to a frame per cut. Each span is opened as its own seeked input, so ffmpeg decodes only what is kept, and the audio fades in and out over 30 ms. Spans are rendered six at a time with uncompressed audio, then joined: the video is copied, and the audio is encoded once at the end so no encoder padding builds up at the joins. The kept subtitle cues are shifted onto the new timeline and written beside the output.

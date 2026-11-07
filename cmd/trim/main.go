@@ -188,6 +188,18 @@ func pinsAt(spec string, ss []subs.Sentence) (map[int]bool, error) {
 				pins[i], found = true, true
 			}
 		}
+		if !found && !isRange {
+			// a time in a pause between sentences means the nearest one
+			best, dist := -1, 2.0
+			for i, s := range ss {
+				if d := math.Max(s.Start-from, from-s.End); d <= dist {
+					best, dist = i, d
+				}
+			}
+			if best >= 0 {
+				pins[best], found = true, true
+			}
+		}
 		if !found {
 			return nil, fmt.Errorf("-keep: no sentence at %s", part)
 		}
@@ -243,8 +255,15 @@ func cut(args []string) error {
 	talkAvg := in.Talk.TalkInterest()
 	for k, c := range cuts {
 		name := outputName(*out, in.Media, target, k, *suggest)
+		length := c.Length
+		if !*dry {
+			length = 0 // report what will be written: cuts land on video frames
+			for _, sp := range media.Snap(c.Spans, in.Info.FPS) {
+				length += sp[1] - sp[0]
+			}
+		}
 		fmt.Printf("%s  %s  %d of %d sentences · %.0f%% interest (whole talk %.0f%%)\n",
-			name, fmtLen(c.Length), len(c.Sentences), len(in.Sentences), 100*c.Interest, 100*talkAvg)
+			name, fmtLen(length), len(c.Sentences), len(in.Sentences), 100*c.Interest, 100*talkAvg)
 		if *dry {
 			for _, i := range c.Sentences {
 				s := in.Sentences[i]
