@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>trim</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* An editing suite: dark ground, cobalt for what is kept, magenta for what you pinned. */
+:root {
+  --ground: #0E1012; --panel: #161A1E; --raised: #1D2227; --line: #2A3138;
+  --ink: #E8ECEF; --muted: #97A1AB; --accent: #8EA2FF; --cut: #3A434C; --pin: #FF5C9A;
+  --display: "Space Grotesk", "Avenir Next", system-ui, sans-serif;
+  --body: Inter, "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ground); color: var(--ink); font: 400 14px/1.5 var(--body); }
+[hidden] { display: none !important; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 16px; }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.logo { font: 700 26px/1 var(--display); letter-spacing: -0.02em; }
+.chip-file { font: 13px var(--mono); color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.cmd { font: 13px var(--mono); color: #C9D1D9; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+button { font: inherit; color: inherit; }
+.primary { font: 600 14px var(--body); color: var(--ground); background: var(--accent); border: 0; border-radius: 8px; padding: 9px 16px; cursor: pointer; min-height: 40px; }
+.primary:disabled { opacity: .6; cursor: progress; }
+.grid { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.main { flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.side { flex: 1 1 320px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.player { position: relative; background: #000; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center; }
+.player video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.player .audio-only { color: var(--muted); font: 15px var(--body); }
+.caption { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); max-width: min(34em, 90%); text-align: center; font-size: 18px; line-height: 1.4; background: rgba(0,0,0,.65); padding: 6px 12px; border-radius: 6px; }
+.playbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.play { display: inline-flex; align-items: center; gap: 8px; font: 600 14px var(--body); background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer; min-height: 40px; }
+.tc { font: 13px var(--mono); color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.label { font: 600 12px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.big { font: 700 34px/1 var(--display); font-variant-numeric: tabular-nums; }
+.big small { font: 600 16px var(--display); color: var(--muted); }
+input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px var(--body); border-radius: 999px; padding: 6px 12px; cursor: pointer; border: 1px solid var(--line); background: transparent; min-height: 36px; }
+.chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: 500 13px var(--body); padding: 7px 14px; cursor: pointer; border: 0; background: transparent; min-height: 36px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--ground); }
+.timeline { display: flex; align-items: flex-end; gap: 2px; height: 104px; touch-action: pan-y; user-select: none; cursor: crosshair; }
+.timeline button { height: 100%; padding: 0; border: 0; background: transparent; display: flex; align-items: flex-end; min-width: 2px; cursor: inherit; }
+.timeline .bar { display: block; width: 100%; border-radius: 2px; background: var(--cut); }
+.timeline .kept .bar { background: var(--accent); }
+.timeline .pinned .bar, .timeline .dragging .bar { box-shadow: inset 0 0 0 2px var(--pin); }
+.timeline .playing .bar { background: #C8D2FF; }
+.ruler { display: flex; justify-content: space-between; font: 12px var(--mono); color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 2px; }
+.pins { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 13px; }
+.pins strong { color: var(--pin); font-weight: 600; }
+.ghost { font: 500 13px var(--body); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; cursor: pointer; min-height: 32px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats > span { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; }
+.stats b { color: var(--ink); font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.option { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; text-align: left; padding: 12px; border-radius: 10px; cursor: pointer; background: var(--raised); border: 1px solid var(--line); }
+.option[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.mini { display: flex; align-items: flex-end; gap: 1px; height: 30px; width: 100%; }
+.mini span { display: block; min-width: 1px; background: var(--cut); }
+.mini span.k { background: var(--accent); }
+.option small { font-size: 13px; color: #C9D1D9; }
+h2 { margin: 0; font: 700 20px var(--display); }
+.note { margin: 0; font-size: 13px; color: var(--muted); }
+.transcript { display: flex; flex-direction: column; gap: 8px; }
+.line { display: flex; gap: 10px; align-items: baseline; }
+.line .t { font: 12px var(--mono); color: var(--muted); flex: none; width: 48px; }
+.line .x { flex: 1; min-width: 0; }
+.tag { font-size: 11px; font-weight: 600; color: var(--pin); border: 1px solid var(--pin); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+.gap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.gap::before, .gap::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.status { font-size: 13px; color: var(--muted); }
+.status.err { color: #FF7B72; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 600px) { .timeline { height: 72px; } .big { font-size: 28px; } .cmd { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="logo">trim</span><span class="chip-file" id="file">loading…</span></div>
+    <div class="actions">
+      <span class="cmd" id="cmd"></span>
+      <button class="primary" id="export">Export</button>
+    </div>
+  </header>
+  <div class="status" id="status" aria-live="polite"></div>
+
+  <div class="grid">
+    <section class="main">
+      <div class="player" id="player">
+        <video id="video" src="/media" preload="metadata" playsinline></video>
+        <div class="audio-only" id="audioOnly" hidden>Audio only</div>
+        <div class="caption" id="caption" hidden></div>
+      </div>
+      <div class="playbar">
+        <button class="play" id="play" aria-label="Play the cut"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14"><path id="playIcon" d="M3 1.5 L12 7 L3 12.5 Z" fill="currentColor"></path></svg><span id="playLabel">Play the cut</span></button>
+        <span class="tc" id="tc">0:00 / 0:00</span>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <label class="label" for="len">Length</label>
+          <span class="big"><span id="lenOut">1:00</span> <small>of <span id="total">0:00</span></small></span>
+        </div>
+        <input id="len" type="range" min="5" max="600" step="1" value="60">
+        <div class="row" style="align-items:center">
+          <div class="presets" id="presets"></div>
+          <div class="seg" role="group" aria-label="Mode">
+            <button id="mBest" aria-pressed="true">Best</button>
+            <button id="mSuggest" aria-pressed="false">Suggest 3</button>
+          </div>
+        </div>
+        <div>
+          <div class="timeline" id="timeline" aria-label="Sentences of the talk"></div>
+          <div class="ruler"><span>0:00</span><span id="mid"></span><span id="end"></span></div>
+        </div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--accent)"></span>kept</span>
+          <span><span class="sw" style="background:var(--cut)"></span>cut</span>
+          <span><span class="sw" style="box-shadow: inset 0 0 0 2px var(--pin)"></span>always kept</span>
+          <span>Bar height is how worth keeping a sentence is. Click to always keep it; shift-click or drag to keep a range.</span>
+        </div>
+        <div class="pins" id="pins" hidden><strong id="pinLabel"></strong><button class="ghost" id="clear">Clear</button><span id="pinNote" class="note"></span></div>
+        <div class="stats">
+          <span><b id="kept">–</b> sentences kept</span>
+          <span>average interest <b id="avg">–</b> vs <span id="talkAvg">–</span> for the whole talk</span>
+        </div>
+        <div class="cards" id="cards" hidden></div>
+      </div>
+    </section>
+
+    <aside class="side card">
+      <h2>The <span id="lenOut2">1:00</span> cut</h2>
+      <div class="transcript" id="transcript"></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const mmss = (s) => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
+const S = { talk: null, target: 60, mode: 'best', pick: 0, pins: new Set(), anchor: null, drag: null, cuts: [], note: '', seq: 0 };
+
+async function boot() {
+  const t = await (await fetch('/api/talk')).json();
+  S.talk = t;
+  const total = Math.ceil(t.length || t.sentences[t.sentences.length - 1].end);
+  $('file').textContent = `${t.name} · ${mmss(total)}`;
+  $('total').textContent = mmss(total);
+  $('mid').textContent = mmss(total / 2); $('end').textContent = mmss(total);
+  $('talkAvg').textContent = Math.round(t.talkInterest * 100) + '%';
+  $('len').max = total;
+  S.target = Math.min(60, Math.floor(total / 2));
+  $('len').value = S.target;
+  if (!t.hasVideo) { $('video').style.height = '0'; $('audioOnly').hidden = false; }
+  const presets = [30, 60, 90, 180, 300].filter((p) => p < total);
+  for (const p of presets) {
+    const b = document.createElement('button'); b.className = 'chip'; b.textContent = mmss(p); b.dataset.t = p;
+    b.onclick = () => setTarget(p); $('presets').append(b);
+  }
+  buildTimeline();
+  await refresh();
+}
+
+function buildTimeline() {
+  const tl = $('timeline'), ss = S.talk.sentences;
+  ss.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.style.flex = `${Math.max(0.5, s.end - s.start)} 1 0`;
+    b.setAttribute('aria-label', `Sentence ${i + 1} at ${mmss(s.start)}`);
+    b.title = s.text;
+    const bar = document.createElement('span'); bar.className = 'bar'; bar.style.height = Math.round(16 + s.score * 84) + '%';
+    b.append(bar);
+    b.onclick = (e) => { if (e.detail > 0) return; pinRange(e.shiftKey && S.anchor != null ? Math.min(S.anchor, i) : i, e.shiftKey && S.anchor != null ? Math.max(S.anchor, i) : i, i); };
+    tl.append(b);
+  });
+  const at = (e) => {
+    const r = tl.getBoundingClientRect(), x = e.clientX - r.left, kids = tl.children;
+    for (let i = 0; i < kids.length; i++) { const k = kids[i].getBoundingClientRect(); if (x <= k.right - r.left + 1) return i; }
+    return kids.length - 1;
+  };
+  tl.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; const i = at(e); try { tl.setPointerCapture(e.pointerId); } catch (_) {} S.drag = { a: i, b: i }; paintDrag(); });
+  tl.addEventListener('pointermove', (e) => { if (!S.drag) return; const i = at(e); if (i !== S.drag.b) { S.drag.b = i; paintDrag(); } });
+  tl.addEventListener('pointerup', (e) => {
+    const d = S.drag; if (!d) return; S.drag = null;
+    if (d.a === d.b && e.shiftKey && S.anchor != null) pinRange(Math.min(S.anchor, d.a), Math.max(S.anchor, d.a), d.a);
+    else pinRange(Math.min(d.a, d.b), Math.max(d.a, d.b), d.b);
+  });
+  tl.addEventListener('pointercancel', () => { S.drag = null; paintDrag(); });
+}
+
+function paintDrag() {
+  const kids = $('timeline').children, d = S.drag;
+  for (let i = 0; i < kids.length; i++) kids[i].classList.toggle('dragging', !!d && i >= Math.min(d.a, d.b) && i <= Math.max(d.a, d.b));
+}
+
+function pinRange(lo, hi, anchor) {
+  let all = true;
+  for (let i = lo; i <= hi; i++) if (!S.pins.has(i)) all = false;
+  for (let i = lo; i <= hi; i++) all ? S.pins.delete(i) : S.pins.add(i);
+  S.anchor = anchor; S.note = ''; S.pick = 0;
+  paintDrag();
+  refresh();
+}
+
+function setTarget(t) { S.target = t; $('len').value = t; S.pick = 0; refresh(); }
+
+async function refresh() {
+  const seq = ++S.seq;
+  const pins = [...S.pins].sort((a, b) => a - b).join(',');
+  const res = await (await fetch(`/api/cut?target=${S.target}&k=3&pins=${pins}`)).json();
+  if (seq !== S.seq) return; // a newer request is on its way
+  if (S.pins.size && res.minTarget > S.target) {
+    S.note = `Length raised to ${mmss(res.minTarget)} to fit the sentences you are keeping.`;
+    S.target = res.minTarget; $('len').value = S.target;
+    return refresh();
+  }
+  S.cuts = res.cuts || [];
+  render();
+}
+
+function current() { return S.cuts[S.mode === 'suggest' ? Math.min(S.pick, S.cuts.length - 1) : 0]; }
+
+function render() {
+  const c = current(), ss = S.talk.sentences, kept = new Set(c ? c.sentences : []);
+  $('lenOut').textContent = $('lenOut2').textContent = mmss(S.target);
+  $('cmd').textContent = `trim -to ${S.target}s${S.pins.size ? ' -keep …' : ''} ${S.talk.name}`;
+  for (const b of $('presets').children) b.setAttribute('aria-pressed', +b.dataset.t === S.target);
+  [...$('timeline').children].forEach((b, i) => { b.classList.toggle('kept', kept.has(i)); b.classList.toggle('pinned', S.pins.has(i)); });
+  $('kept').textContent = c ? `${c.sentences.length} of ${ss.length}` : '0';
+  $('avg').textContent = c ? Math.round(c.interest * 100) + '%' : '–';
+  $('pins').hidden = S.pins.size === 0;
+  $('pinLabel').textContent = `${S.pins.size} ${S.pins.size === 1 ? 'sentence' : 'sentences'} always kept`;
+  $('pinNote').textContent = S.note;
+  $('cards').hidden = S.mode !== 'suggest';
+  if (S.mode === 'suggest') renderCards();
+  const tr = $('transcript'); tr.innerHTML = '';
+  if (!c) { tr.innerHTML = '<p class="note">Nothing fits. Make the cut longer.</p>'; return; }
+  let last = 0;
+  const gap = (s) => { const g = document.createElement('div'); g.className = 'gap'; g.textContent = `${mmss(s)} cut`; tr.append(g); };
+  for (const i of c.sentences) {
+    const s = ss[i];
+    if (s.start - last > 1) gap(s.start - last);
+    const l = document.createElement('div'); l.className = 'line';
+    l.innerHTML = `<span class="t">${mmss(s.start)}</span><span class="x"></span>`;
+    l.lastChild.textContent = s.text;
+    if (S.pins.has(i)) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'ALWAYS KEPT'; l.lastChild.append(' ', t); }
+    tr.append(l);
+    last = s.end;
+  }
+  const total = S.talk.length || ss[ss.length - 1].end;
+  if (total - last > 1) gap(total - last);
+  $('tc').textContent = `0:00 / ${mmss(c.length)}`;
+}
+
+function renderCards() {
+  const box = $('cards'); box.innerHTML = '';
+  S.cuts.forEach((c, k) => {
+    const b = document.createElement('button'); b.className = 'option'; b.setAttribute('aria-pressed', k === S.pick);
+    const mini = document.createElement('span'); mini.className = 'mini';
+    const kept = new Set(c.sentences);
+    S.talk.sentences.forEach((s, i) => { const x = document.createElement('span'); x.style.flex = `${Math.max(0.5, s.end - s.start)} 1 0`; x.style.height = Math.round(20 + s.score * 80) + '%'; if (kept.has(i)) x.className = 'k'; mini.append(x); });
+    const t = document.createElement('small'); t.textContent = `Option ${k + 1} · ${mmss(c.length)} · ${c.sentences.length} sentences · ${Math.round(c.interest * 100)}% interest`;
+    b.append(mini, t); b.onclick = () => { S.pick = k; render(); };
+    box.append(b);
+  });
+  if (S.cuts.length < 3) {
+    const n = document.createElement('p'); n.className = 'note';
+    n.textContent = S.cuts.length === 1 ? 'Only one cut fits these choices. Make it longer or keep fewer sentences for alternatives.' : 'Only two clearly different cuts fit these choices.';
+    box.append(n);
+  }
+}
+
+// ---------- playing just the cut ----------
+const P = { on: false, span: 0, elapsed: 0 };
+const video = $('video');
+function stopPlay() { P.on = false; video.pause(); $('playLabel').textContent = 'Play the cut'; $('playIcon').setAttribute('d', 'M3 1.5 L12 7 L3 12.5 Z'); $('caption').hidden = true; }
+$('play').onclick = () => {
+  const c = current(); if (!c) return;
+  if (P.on) return stopPlay();
+  P.on = true; P.span = 0; P.elapsed = 0;
+  video.currentTime = c.spans[0][0];
+  video.play().catch(() => { $('status').textContent = 'The browser could not play this file. Export still works.'; stopPlay(); });
+  $('playLabel').textContent = 'Stop'; $('playIcon').setAttribute('d', 'M2 2 H12 V12 H2 Z');
+};
+video.addEventListener('timeupdate', () => {
+  if (!P.on) return;
+  const c = current(), sp = c.spans[P.span], t = video.currentTime;
+  if (t >= sp[1] - 0.02) {
+    P.elapsed += sp[1] - sp[0]; P.span++;
+    if (P.span >= c.spans.length) { stopPlay(); return; }
+    video.currentTime = c.spans[P.span][0]; return;
+  }
+  const done = P.elapsed + Math.max(0, t - sp[0]);
+  $('tc').textContent = `${mmss(done)} / ${mmss(c.length)}`;
+  const ss = S.talk.sentences, i = c.sentences.find((j) => ss[j].start - 0.2 <= t && t < ss[j].end + 0.2);
+  $('caption').hidden = i === undefined; if (i !== undefined) $('caption').textContent = ss[i].text;
+  [...$('timeline').children].forEach((b, j) => b.classList.toggle('playing', j === i));
+});
+
+// ---------- controls ----------
+$('len').addEventListener('input', (e) => { stopPlay(); S.target = +e.target.value; S.pick = 0; S.note = ''; refresh(); });
+$('mBest').onclick = () => { S.mode = 'best'; $('mBest').setAttribute('aria-pressed', true); $('mSuggest').setAttribute('aria-pressed', false); render(); };
+$('mSuggest').onclick = () => { S.mode = 'suggest'; $('mSuggest').setAttribute('aria-pressed', true); $('mBest').setAttribute('aria-pressed', false); render(); };
+$('clear').onclick = () => { S.pins.clear(); S.anchor = null; S.note = ''; refresh(); };
+$('export').onclick = async () => {
+  const c = current(); if (!c) return;
+  const btn = $('export'); btn.disabled = true; btn.textContent = 'Exporting…';
+  $('status').className = 'status'; $('status').textContent = 'Writing the cut with ffmpeg. Long videos take a while.';
+  try {
+    const r = await fetch('/api/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sentences: c.sentences, target: S.target }) });
+    if (!r.ok) throw new Error(await r.text());
+    const j = await r.json();
+    $('status').textContent = `Saved ${mmss(j.length)} to ${j.path} (subtitles beside it).`;
+  } catch (e) {
+    $('status').className = 'status err'; $('status').textContent = 'Export failed: ' + e.message;
+  } finally { btn.disabled = false; btn.textContent = 'Export'; }
+};
+boot().catch((e) => { $('status').className = 'status err'; $('status').textContent = 'Could not load the talk: ' + e.message; });
+</script>
+</body>
+</html>
